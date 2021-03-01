@@ -43,6 +43,9 @@ http {
 * Create ssl certificates:
 sudo openssl req -x509 -nodes -days 365 -newkey rsa:2048 -keyout nginx-selfsigned.key -out nginx-selfsigned.crt
 
-*Copy nginx-selfsigned.key and nginx-selfsigned.crt files to /etc/nginx/ssl/ directory
+* Copy nginx-selfsigned.key and nginx-selfsigned.crt files to /etc/nginx/ssl/ directory
+
+* Restart nginx service
+sudo systemctl restart nginx.service
 
 

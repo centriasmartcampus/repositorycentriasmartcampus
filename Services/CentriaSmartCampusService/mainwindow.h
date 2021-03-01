@@ -3,6 +3,8 @@
 
 #include <QMainWindow>
 
+#include "sclog.h"
+
 namespace Ui {
 class MainWindow;
 }
