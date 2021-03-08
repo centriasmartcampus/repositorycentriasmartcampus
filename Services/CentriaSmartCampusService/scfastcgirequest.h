@@ -9,6 +9,7 @@ public:
     QByteArray Request;
     QByteArray Response;
     QMap<QString, QString> Parameters;
+    QByteArray Content;
 
 };
 

@@ -151,23 +151,68 @@ void SCTCPListener::RequestParser(SCFastCGIRequest& scFastCGIRequest)
                 case FastCGI_PARAMS:
                     if(contentLength > 2)
                     {
-
                         int characterIndex = 0;
-
                         do
                         {
                             int parameterNameLength = (int)content[characterIndex + 0];
                             int parameterValueLength = (int)content[characterIndex + 1];
                             QString parameterName = QString::fromUtf8(&content[characterIndex + 2], parameterNameLength);
                             QString parameterValue = QString::fromUtf8(&content[characterIndex + 2 + parameterNameLength], parameterValueLength);
+//                            if(parameterName == "CONTENT_LENGTH")
+//                            {
+//                                QList<uchar> lengthCharacters;
+//                                for(int lengthIndex = 0; lengthIndex < parameterValueLength; lengthIndex++)
+//                                {
+//                                    lengthCharacters.append(content[characterIndex + 2 + parameterNameLength] + lengthIndex);
+//                                }
+//                                if(parameterValueLength == 2)
+//                                {
+//                                    ushort contentLength = ushort(content[characterIndex + 2 + parameterNameLength]) << 8 | (ushort)(content[characterIndex + 2 + parameterNameLength] + 1);
+//                                    parameterValue = QString(contentLength);
+//                                }
+//                            }
 
                             scFastCGIRequest.Parameters[parameterName] = parameterValue;
 
                             characterIndex = characterIndex + 2 + parameterNameLength + parameterValueLength;
                         } while(characterIndex < contentLength);
                     }
-
                     break;
+
+                case FastCGI_STDIN:
+                    if(contentLength > 0)
+                    {
+                        scFastCGIRequest.Content.append(QByteArray::fromRawData(&content[0], contentLength));
+                    }
+//                    QString::fromUtf8(&content[0], contentLength);
+//                    QString testi = "";
+//                    for(int contentIndex = 0; contentIndex < contentLength; contentIndex++)
+//                    {
+//                        testi.append(content[contentIndex]);
+//                    }
+//                    int t = 0;
+
+//                    RequestList::iterator it = connection.requests.find(request_id);
+//                    if (it == connection.requests.end())
+//                        break;
+
+//                    RequestInfo& request = *it->second;
+//                    if (!request.in_closed)
+//                        if (content_length != 0) {
+//                            request.in.append(content, content_length);
+//                            if (request.params_closed && request.status == 0) {
+//                                request.status = (*handle_data)(request);
+//                                process_write_request(connection, request_id, request);
+//                            }
+//                        } else {
+//                            request.in_closed = true;
+//                            if (request.params_closed && request.status == 0) {
+//                                request.status = (*handle_complete)(request);
+//                                process_write_request(connection, request_id, request);
+//                            }
+//                        }
+                    break;
+
                 }
             }
             else

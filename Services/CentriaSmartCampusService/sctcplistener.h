@@ -37,7 +37,7 @@ typedef struct {
 //#define FastCGI_ABORT_REQUEST     2
 //#define FastCGI_END_REQUEST       3
 #define FastCGI_PARAMS            4
-//#define FastCGI_STDIN             5
+#define FastCGI_STDIN             5
 #define FastCGI_STDOUT            6
 //#define FastCGI_STDERR            7
 //#define FastCGI_DATA              8

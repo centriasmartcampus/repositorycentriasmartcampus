@@ -22,7 +22,7 @@ public slots:
     void NewRequest(SCFastCGIRequest& scFastCGIRequest);
 
 private:
-    SCTCPListener *_tcpListener = nullptr;
+    SCTCPListener *_scTCPListener = nullptr;
 
 
 };
