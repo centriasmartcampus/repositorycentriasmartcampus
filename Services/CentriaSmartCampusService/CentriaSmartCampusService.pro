@@ -37,6 +37,7 @@ FORMS += \
 DISTFILES += \
     config.ini
 
+
 copyConfig.commands = $(COPY) $$shell_path($$PWD/config.ini) $$shell_path($$OUT_PWD/$$DESTDIR/config.ini)
 first.depends += $(first) copyConfig
 QMAKE_EXTRA_TARGETS += first copyConfig

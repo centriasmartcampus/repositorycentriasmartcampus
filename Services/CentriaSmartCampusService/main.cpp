@@ -20,9 +20,9 @@ int main(int argc, char *argv[])
     SCService scService(&a);
     return a.exec();
 
-    //QApplication a(argc, argv);
-    //MainWindow w;
-    //w.show();
+//    QApplication a(argc, argv);
+//    MainWindow w;
+//    w.show();
 
-    //return a.exec();
+//    return a.exec();
 }
