@@ -8,3 +8,12 @@ sudo apt-get install nginx
 
 //Git installation
 sudo apt install git-all
+
+//Git configuration
+mkdir projects
+cd projects
+git init
+git remote add origin https://github.com/centriasmartcampus/repositorycentriasmartcampus.git
+git clone https://github.com/centriasmartcampus/repositorycentriasmartcampus.git
+
+
