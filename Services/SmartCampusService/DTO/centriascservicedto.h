@@ -14,6 +14,7 @@ public:
     QString ID = "";
     QString FastCGIListener = "";
     QString PlatformClient = "";
+    QString CentriaTCPServer = "";
 
     CentriaSCServiceDTO();
     CentriaSCServiceDTO(QString id);

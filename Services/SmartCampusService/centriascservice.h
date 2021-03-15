@@ -7,6 +7,7 @@
 #include "DTO/centriascservicedto.h"
 #include "../Common/centriafastcgitcplistener.h"
 #include "centriascplatformclient.h"
+#include "../Common/centriatcpserver.h"
 
 #define SERVICE_NAME "CentriaSCService"
 
@@ -22,11 +23,13 @@ public:
 public slots:
     void NewRequest(CentriaFastCGIRequest& centriaFastCGIRequest);
 
+
 signals:
 
 private:
     CentriaFastCGITCPListener *_centriaFastCGITCPListener = nullptr;
     CentriaSCPlatformClient *_centriaSCPlatformClient = nullptr;
+    CentriaTCPServer *_centriaTCPServer = nullptr;
 
 };
 

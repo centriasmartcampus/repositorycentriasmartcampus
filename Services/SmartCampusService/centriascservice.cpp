@@ -17,6 +17,11 @@ CentriaSCService::CentriaSCService(QObject *parent) : QObject(parent)
         _centriaSCPlatformClient = new CentriaSCPlatformClient(DTO.PlatformClient, this);
     }
 
+    if(DTO.CentriaTCPServer.size() > 0)
+    {
+        _centriaTCPServer = new CentriaTCPServer(DTO.CentriaTCPServer);
+    }
+
     SCLog::AddDebug("CentriaSCService::CentriaSCService Constructor end");
 }
 
@@ -27,6 +32,17 @@ CentriaSCService::~CentriaSCService()
     {
         delete _centriaFastCGITCPListener;
     }
+
+    if(_centriaSCPlatformClient != nullptr)
+    {
+        delete _centriaSCPlatformClient;
+    }
+
+    if(_centriaTCPServer != nullptr)
+    {
+        delete _centriaTCPServer;
+    }
+
     SCLog::AddDebug("CentriaSCService::~CentriaSCService Constructor end");
 }
 
@@ -36,3 +52,4 @@ void CentriaSCService::NewRequest(CentriaFastCGIRequest &centriaFastCGIRequest)
     centriaFastCGIRequest.Response.append("Mitä ihmettä <br> toinen rivi\n");
     centriaFastCGIRequest.Response.append(QDateTime::currentDateTime().toString("hh:mm:ss.zzz"));
 }
+
