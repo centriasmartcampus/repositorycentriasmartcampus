@@ -13,9 +13,11 @@ DEFINES += QT_DEPRECATED_WARNINGS
 
 SOURCES += \
         ../../Common/DTO/centriafastcgitcplistenerdto.cpp \
+        ../../Common/DTO/centriatcpclientdto.cpp \
         ../../Common/DTO/centriatcpserverdto.cpp \
         ../../Common/centriafastcgitcplistener.cpp \
         ../../Common/centriahttpsclient.cpp \
+        ../../Common/centriatcpclient.cpp \
         ../../Common/centriatcpclientconnection.cpp \
         ../../Common/centriatcpserver.cpp \
         DTO/centriascplatformclientdto.cpp \
@@ -40,10 +42,12 @@ QMAKE_EXTRA_TARGETS += first copyConfig
 
 HEADERS += \
     ../../Common/DTO/centriafastcgitcplistenerdto.h \
+    ../../Common/DTO/centriatcpclientdto.h \
     ../../Common/DTO/centriatcpserverdto.h \
     ../../Common/centriafastcgirequest.h \
     ../../Common/centriafastcgitcplistener.h \
     ../../Common/centriahttpsclient.h \
+    ../../Common/centriatcpclient.h \
     ../../Common/centriatcpclientconnection.h \
     ../../Common/centriatcpserver.h \
     DTO/centriascplatformclientdto.h \

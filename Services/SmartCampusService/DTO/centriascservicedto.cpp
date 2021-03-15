@@ -59,6 +59,17 @@ void CentriaSCServiceDTO::LoadConfiguration()
                 SCLog::AddError("CentriaTCPServer is not defined in config.ini file");
             }
 
+            //CentriaTCPClient
+            if(settings.contains("CentriaTCPClient"))
+            {
+                CentriaTCPClient = settings.value("CentriaTCPClient").toString();
+                SCLog::AddDebug(QString("CentriaTCPClient=%1").arg(CentriaTCPClient.simplified()));
+            }
+            else
+            {
+                SCLog::AddError("CentriaTCPClient is not defined in config.ini file");
+            }
+
         }
     }
 

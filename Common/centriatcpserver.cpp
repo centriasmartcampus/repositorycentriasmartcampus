@@ -11,11 +11,11 @@ CentriaTCPServer::CentriaTCPServer(QString tcpServerName, QObject *parent) : QOb
         connect(_qTcpServer, SIGNAL(newConnection()), this, SLOT(newConnection()));
         if(!_qTcpServer->listen(QHostAddress::Any, DTO.TCPPort))
         {
-            SCLog::AddError(QString("CentriaFastCGITCPListener(%1) QTcpServer could not start").arg(DTO.ID));
+            SCLog::AddError(QString("CentriaTCPServer(%1) QTcpServer could not start").arg(DTO.ID));
         }
         else
         {
-            SCLog::AddLog(QString("CentriaFastCGITCPListener(%1) started").arg(DTO.ID));
+            SCLog::AddLog(QString("CentriaTCPServer(%1) started").arg(DTO.ID));
             _timerId = startTimer(100);
         }
     }
