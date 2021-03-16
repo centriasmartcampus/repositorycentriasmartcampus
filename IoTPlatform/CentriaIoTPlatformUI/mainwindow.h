@@ -10,7 +10,9 @@
 #include <QHeaderView>
 #include <QStandardItemModel>
 
-#include "dialogcreateobject.h"
+//#include "dialogcreateobject.h"
+#include "dialogcreatehierarchyitem.h"
+#include "dialogcreateobjectlink.h"
 
 #include "DTO/centriawebservicedto.h"
 #include "../Common/centriafastcgitcplistener.h"
@@ -40,6 +42,8 @@ private slots:
 
     void on_treeWidgetObjectHierarchy_itemClicked(QTreeWidgetItem *item, int column);
 
+    void on_pushButtonCreateObjectLink_clicked();
+
 private:
     Ui::MainWindow *ui;
 
@@ -53,8 +57,8 @@ private:
 
      void PopulateTreeView();
      void PopulateObjectList();
-     void CreateNewObject(QTreeWidgetItem* parentItem = nullptr);
-     void DeleteObject(QTreeWidgetItem* item);
+     void CreateNewHierarchyItem(QTreeWidgetItem* parentItem = nullptr);
+     void DeleteHierarchyItem(QTreeWidgetItem* item);
 
 
      //bool eventFilter(QObject *obj, QEvent *e);

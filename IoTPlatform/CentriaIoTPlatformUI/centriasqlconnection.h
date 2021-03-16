@@ -24,8 +24,9 @@ public:
     QMap<QUuid, SQLObject> GetObjects();
     QMap<quint64,SQLObjectHierarchy> GetObjectHierarchies();
 
-    void AddNewObjectHierarchy(SQLObjectHierarchy sqlObjectHierarchy);
+    void AddNewObjectHierarchy(SQLObjectHierarchy& sqlObjectHierarchy);
     void DeleteObjectHierarchy(quint64 id);
+    void UpdateObjectHierarchy(SQLObjectHierarchy& sqlObjectHierarchy);
 
 signals:
 

@@ -76,7 +76,7 @@ QMap<quint64,SQLObjectHierarchy> CentriaSQLConnection::GetObjectHierarchies()
     {
         QSqlQuery query(_database);
 
-        QString selectQuery = QString("SELECT ID, ParentID, Name, ObjectUIID FROM ObjectHierarchy ORDER BY ParentID");
+        QString selectQuery = QString("SELECT ID, ParentID, Name, ObjectUUID FROM ObjectHierarchy ORDER BY ParentID");
         if(query.exec(selectQuery))
         {
             while(query.next())
@@ -95,7 +95,7 @@ QMap<quint64,SQLObjectHierarchy> CentriaSQLConnection::GetObjectHierarchies()
     return sqlObjectHiearchies;
 }
 
-void CentriaSQLConnection::AddNewObjectHierarchy(SQLObjectHierarchy sqlObjectHierarchy)
+void CentriaSQLConnection::AddNewObjectHierarchy(SQLObjectHierarchy& sqlObjectHierarchy)
 {
     SCLog::AddDebug(QString("CentriaSQLConnection::AddNewObjectHierarchy%1) start").arg(DTO.ID));
     QSqlQuery query(_database);
@@ -126,3 +126,24 @@ void CentriaSQLConnection::DeleteObjectHierarchy(quint64 id)
     }
     SCLog::AddDebug(QString("CentriaSQLConnection::DeleteObjectHierarchy%1) end").arg(DTO.ID));
 }
+
+void CentriaSQLConnection::UpdateObjectHierarchy(SQLObjectHierarchy &sqlObjectHierarchy)
+{
+    SCLog::AddDebug(QString("CentriaSQLConnection::UpdateObjectHierarchy %1) start").arg(DTO.ID));
+    QSqlQuery query(_database);
+    QString updateQuery = QString("UPDATE ObjectHierarchy SET ParentID=:parentID, Name=:name, ObjectUUID=:objectUUID WHERE ID=%1;").arg(sqlObjectHierarchy.ID);
+    query.prepare(updateQuery);
+    query.bindValue(":parentID", sqlObjectHierarchy.ParentID);
+    query.bindValue(":name", sqlObjectHierarchy.Name);
+    query.bindValue(":objectUUID", sqlObjectHierarchy.ObjectUUID.toByteArray(), QSql::In | QSql::Binary);
+    //query.prepare("INSERT INTO Object (ObjectUUID, Name) VALUES( :data, 'Service')");
+    //query.bindValue(":data", uuid.toByteArray(), QSql::In | QSql::Binary);
+    if(!query.exec())
+    {
+        SCLog::AddError("Cannot updatehierarchy object to database");
+        SCLog::AddError(query.lastError().text());
+    }
+    SCLog::AddDebug(QString("CentriaSQLConnection::UpdateObjectHierarchy %1) end").arg(DTO.ID));
+}
+
+

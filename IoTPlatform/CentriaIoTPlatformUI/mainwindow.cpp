@@ -54,23 +54,24 @@ void MainWindow::NewRequest(CentriaFastCGIRequest &scFastCGIRequest)
     scFastCGIRequest.Response.append("}\n");
 }
 
-void MainWindow::CreateNewObject(QTreeWidgetItem* parentItem)
+void MainWindow::CreateNewHierarchyItem(QTreeWidgetItem* parentItem)
 {
-    DialogCreateObject dialogCreateObject(this);
-    int result = dialogCreateObject.exec();
+    DialogCreateHierarchyItem dialogCreateHierarchyItem(this);
+    int result = dialogCreateHierarchyItem.exec();
     if(result == QDialog::Accepted)
     {
         if(_centriaSQLConnection != nullptr)
-        {
-            quint64 parentID = parentItem != nullptr ? parentItem->text(1).toULongLong() : 0;
-            dialogCreateObject.SQLObjectHierarchyValue.ParentID =  parentID;
-            _centriaSQLConnection->AddNewObjectHierarchy(dialogCreateObject.SQLObjectHierarchyValue);
+        {            
+            SQLObjectHierarchy sqlObjectHierarchy;
+            sqlObjectHierarchy.Name = dialogCreateHierarchyItem.Name;
+            sqlObjectHierarchy.ParentID = parentItem != nullptr ? parentItem->text(1).toULongLong() : 0;
+            _centriaSQLConnection->AddNewObjectHierarchy(sqlObjectHierarchy);
             PopulateTreeView();
         }
     }
 }
 
-void MainWindow::DeleteObject(QTreeWidgetItem *item)
+void MainWindow::DeleteHierarchyItem(QTreeWidgetItem *item)
 {
     if(_centriaSQLConnection != nullptr)
     {
@@ -185,9 +186,9 @@ void MainWindow::on_treeWidgetObjectHierarchy_customContextMenuRequested(const Q
     if(parentItem == nullptr)
     {
         QMenu menu(this);
-        QAction actionCreateNewObject("Create new root item", this);
-        actionCreateNewObject.setProperty("Command", "AddRootItem");
-        menu.addAction(&actionCreateNewObject);
+        QAction actionCreateNewHierarchyItem("Create new root item", this);
+        actionCreateNewHierarchyItem.setProperty("Command", "AddRootItem");
+        menu.addAction(&actionCreateNewHierarchyItem);
         menu.exec( ui->treeWidgetObjectHierarchy->mapToGlobal(pos));
 
         QAction *selectedAction = menu.exec( ui->treeWidgetObjectHierarchy->mapToGlobal(pos));
@@ -196,13 +197,13 @@ void MainWindow::on_treeWidgetObjectHierarchy_customContextMenuRequested(const Q
     else
     {
         QMenu menu(this);
-        QAction actionAddNewChildObject(QString("Create new child item for %1").arg(parentItem->text(0)), this);
-        actionAddNewChildObject.setProperty("Command", "AddChildItem");
-        menu.addAction(&actionAddNewChildObject);
+        QAction actionAddNewChildItem(QString("Create new child item for %1").arg(parentItem->text(0)), this);
+        actionAddNewChildItem.setProperty("Command", "AddChildItem");
+        menu.addAction(&actionAddNewChildItem);
 
-        QAction actionDeleteObject(QString("Delete %1 item").arg(parentItem->text(0)), this);
-        actionDeleteObject.setProperty("Command", "DeleteItem");
-        menu.addAction(&actionDeleteObject);
+        QAction actionDeleteItem(QString("Delete %1 item").arg(parentItem->text(0)), this);
+        actionDeleteItem.setProperty("Command", "DeleteItem");
+        menu.addAction(&actionDeleteItem);
 
         QAction *selectedAction = menu.exec( ui->treeWidgetObjectHierarchy->mapToGlobal(pos));
         command = selectedAction != nullptr ? selectedAction->property("Command").toString() : "";
@@ -210,15 +211,15 @@ void MainWindow::on_treeWidgetObjectHierarchy_customContextMenuRequested(const Q
 
     if(command == "AddRootItem")
     {
-        CreateNewObject(nullptr);
+        CreateNewHierarchyItem(nullptr);
     }
     else if(command == "AddChildItem")
     {
-        CreateNewObject(parentItem);
+        CreateNewHierarchyItem(parentItem);
     }
     else if(command == "DeleteItem")
     {
-        DeleteObject(parentItem);
+        DeleteHierarchyItem(parentItem);
     }
 }
 
@@ -229,5 +230,43 @@ void MainWindow::on_treeWidgetObjectHierarchy_itemClicked(QTreeWidgetItem *item,
     {
         SQLObjectHierarchy sqlObjectHierarchy = _sqlObjectHierarchies[ID];
         ui->lineEditObjectHierarchyName->setText(sqlObjectHierarchy.Name);
+
+        bool objectLinkExists = !sqlObjectHierarchy.ObjectUUID.isNull();
+        ui->groupBoxObject->setEnabled(objectLinkExists);
+        ui->pushButtonCreateObjectLink->setEnabled(!objectLinkExists);
+        if(objectLinkExists)
+        {
+            SQLObject sqlObject = _sqlObjects[sqlObjectHierarchy.ObjectUUID];
+            ui->lineEditObjecName->setText(sqlObject.Name);
+            ui->lineEditObjecUUID->setText(sqlObject.ObjectUUID.toString(QUuid::WithoutBraces));
+        }
+        else
+        {
+            ui->lineEditObjecName->setText("");
+            ui->lineEditObjecUUID->setText("");
+        }
+
+    }
+}
+
+void MainWindow::on_pushButtonCreateObjectLink_clicked()
+{
+    QTreeWidgetItem* item = ui->treeWidgetObjectHierarchy->selectedItems().first();
+    quint64 ID = item != nullptr ? item->text(1).toULongLong() : 0;
+    if(ID > 0)
+    {
+        SQLObjectHierarchy sqlObjectHierarchy = _sqlObjectHierarchies[ID];
+
+        if(_centriaSQLConnection != nullptr)
+        {
+            DialogCreateObjectLink dialogCreateObjectLink(_centriaSQLConnection, sqlObjectHierarchy, this);
+            int result = dialogCreateObjectLink.exec();
+            if(result == QDialog::Accepted)
+            {
+                sqlObjectHierarchy.ObjectUUID = dialogCreateObjectLink.SelectedSQLObject->ObjectUUID;
+                _centriaSQLConnection->UpdateObjectHierarchy(sqlObjectHierarchy);
+                PopulateTreeView();
+            }
+        }
     }
 }

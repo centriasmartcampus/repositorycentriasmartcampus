@@ -15,16 +15,19 @@ TEMPLATE = app
 DEFINES += QT_DEPRECATED_WARNINGS
 
 SOURCES += \
+    dialogcreatehierarchyitem.cpp \
+    dialogcreateobjectlink.cpp \
         main.cpp \
         mainwindow.cpp \
     ../../Common/centriafastcgitcplistener.cpp \
     ../../Common/DTO/centriafastcgitcplistenerdto.cpp \
     DTO/centriawebservicedto.cpp \
     centriasqlconnection.cpp \
-    DTO/centriasqlconnectiondto.cpp \
-    dialogcreateobject.cpp
+    DTO/centriasqlconnectiondto.cpp
 
 HEADERS += \
+    dialogcreatehierarchyitem.h \
+    dialogcreateobjectlink.h \
         mainwindow.h \
     ../../Common/centriafastcgitcplistener.h \
     ../../Common/centriafastcgirequest.h \
@@ -33,12 +36,12 @@ HEADERS += \
     centriasqlconnection.h \
     DTO/centriasqlconnectiondto.h \
     Entities/sqlobject.h \
-    Entities/sqlobjecthierarchy.h \
-    dialogcreateobject.h
+    Entities/sqlobjecthierarchy.h
 
 FORMS += \
-        mainwindow.ui \
-    dialogcreateobject.ui
+    dialogcreatehierarchyitem.ui \
+    dialogcreateobjectlink.ui \
+        mainwindow.ui
 
 INCLUDEPATH += ../../SCInclude
 
