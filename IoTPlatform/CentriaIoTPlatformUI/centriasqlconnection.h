@@ -11,6 +11,8 @@
 #include "DTO/centriasqlconnectiondto.h"
 #include "Entities/sqlobject.h"
 #include "Entities/sqlobjecthierarchy.h"
+#include "Entities/sqlattribute.h"
+#include "Entities/sqlattributevalue.h"
 
 class CentriaSQLConnection : public QObject
 {
@@ -23,10 +25,17 @@ public:
 
     QMap<QUuid, SQLObject> GetObjects();
     QMap<quint64,SQLObjectHierarchy> GetObjectHierarchies();
+    QMap<quint64, SQLAttribute> GetAttributes();
+    QMap<quint64, SQLAttributeValue> GetObjectAttributeValues(QUuid objectUUID);
 
     void AddNewObjectHierarchy(SQLObjectHierarchy& sqlObjectHierarchy);
+    void AddNewObject(SQLObject& sqlObject);
+    void AddNewAttribute(SQLAttribute & sqlAttribute);
+    void AddNewAttributeValue(SQLAttributeValue &sqlAttributeValue);
     void DeleteObjectHierarchy(quint64 id);
     void UpdateObjectHierarchy(SQLObjectHierarchy& sqlObjectHierarchy);
+
+
 
 signals:
 

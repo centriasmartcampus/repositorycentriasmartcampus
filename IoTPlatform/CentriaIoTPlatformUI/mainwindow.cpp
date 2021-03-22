@@ -8,6 +8,11 @@ MainWindow::MainWindow(QWidget *parent) :
     ui->setupUi(this);
     ui->treeWidgetObjectHierarchy->setContextMenuPolicy(Qt::CustomContextMenu);
 
+    ui->tableViewObject->horizontalHeader()->setSectionResizeMode(QHeaderView::Stretch);
+    ui->tableViewObject->setSelectionMode(QAbstractItemView::SingleSelection);
+    ui->tableViewObject->setSelectionBehavior(QAbstractItemView::SelectRows);
+    ui->tableWidgetAttributes->setContextMenuPolicy(Qt::CustomContextMenu);
+
     DTO = CentriaWebServiceDTO("CentriaWebService");
     if(DTO.CentriaFastCGITCPListener.size() > 0)
     {
@@ -81,6 +86,33 @@ void MainWindow::DeleteHierarchyItem(QTreeWidgetItem *item)
     }
 }
 
+void MainWindow::AddNewAttribute()
+{
+    if(_centriaSQLConnection != nullptr)
+    {
+        DialogAddAttribute dialogAddAttribute(_centriaSQLConnection, this);
+        int result = dialogAddAttribute.exec();
+        if(result == QDialog::Accepted)
+        {
+            SQLAttribute *addedSQLAttribute = dialogAddAttribute.AddedSQLAttribute;
+            if(addedSQLAttribute != nullptr && _selectedSQLObjectHierarchy != nullptr)
+            {
+                SQLAttributeValue sqlAttributeValue;
+                sqlAttributeValue.AttributeID = addedSQLAttribute->ID;
+                sqlAttributeValue.ObjectUUID = _selectedSQLObjectHierarchy->ObjectUUID;
+                sqlAttributeValue.Value = QByteArray();
+                _centriaSQLConnection->AddNewAttributeValue(sqlAttributeValue);
+                PopulateObjectAttributesTable();
+            }
+        }
+    }
+}
+
+void MainWindow::RemoveAttribute(QTableWidgetItem *item)
+{
+
+}
+
 void MainWindow::PopulateTreeView()
 {
     ui->treeWidgetObjectHierarchy->clear();
@@ -149,6 +181,44 @@ void MainWindow::PopulateObjectList()
     ui->tableViewObject->setModel(_objectTableModel);
 }
 
+void MainWindow::PopulateObjectAttributesTable()
+{
+    if(_centriaSQLConnection != nullptr && _selectedSQLObjectHierarchy != nullptr)
+    {
+        QMap<quint64, SQLAttributeValue> sqlAttributeValues = _centriaSQLConnection->GetObjectAttributeValues(_selectedSQLObjectHierarchy->ObjectUUID);
+        QMap<quint64, SQLAttribute> sqlAttributes = _centriaSQLConnection->GetAttributes();
+
+        if(_attributeTableModel != nullptr)
+        {
+            _attributeTableModel->clear();
+            delete _attributeTableModel;
+
+        }
+        _attributeTableModel = new QStandardItemModel(this);
+        _attributeTableModel->setColumnCount(2);
+        _attributeTableModel->setHeaderData(0, Qt::Horizontal, QObject::tr("Name"));
+        _attributeTableModel->setHeaderData(1, Qt::Horizontal, QObject::tr("UUID"));
+
+        if(_centriaSQLConnection != nullptr)
+        {
+            _attributeTableModel->setRowCount(sqlAttributeValues.size());
+
+            int rowIndex = 0;
+            foreach(SQLAttributeValue sqlAttributeValue, sqlAttributeValues)
+            {
+                SQLAttribute sqlAttribute = sqlAttributes[sqlAttributeValue.AttributeID];
+
+                _attributeTableModel->setItem(rowIndex,0,new QStandardItem(sqlAttribute.Name));
+                _attributeTableModel->setItem(rowIndex,1,new QStandardItem(QString(sqlAttributeValue.Value)));
+                rowIndex++;
+            }
+
+
+        }
+        ui->tableViewObject->setModel(_attributeTableModel);
+    }
+}
+
 //bool MainWindow::eventFilter(QObject *target, QEvent *event)
 //{
 //    if (target == ui->treeViewObject)
@@ -189,7 +259,7 @@ void MainWindow::on_treeWidgetObjectHierarchy_customContextMenuRequested(const Q
         QAction actionCreateNewHierarchyItem("Create new root item", this);
         actionCreateNewHierarchyItem.setProperty("Command", "AddRootItem");
         menu.addAction(&actionCreateNewHierarchyItem);
-        menu.exec( ui->treeWidgetObjectHierarchy->mapToGlobal(pos));
+        //menu.exec( ui->treeWidgetObjectHierarchy->mapToGlobal(pos));
 
         QAction *selectedAction = menu.exec( ui->treeWidgetObjectHierarchy->mapToGlobal(pos));
         command = selectedAction != nullptr ? selectedAction->property("Command").toString() : "";
@@ -225,20 +295,22 @@ void MainWindow::on_treeWidgetObjectHierarchy_customContextMenuRequested(const Q
 
 void MainWindow::on_treeWidgetObjectHierarchy_itemClicked(QTreeWidgetItem *item, int column)
 {
+    _selectedSQLObjectHierarchy = nullptr;
     quint64 ID = item != nullptr ? item->text(1).toULongLong() : 0;
     if(ID > 0)
     {
-        SQLObjectHierarchy sqlObjectHierarchy = _sqlObjectHierarchies[ID];
-        ui->lineEditObjectHierarchyName->setText(sqlObjectHierarchy.Name);
+        _selectedSQLObjectHierarchy = &_sqlObjectHierarchies[ID];
+        ui->lineEditObjectHierarchyName->setText(_selectedSQLObjectHierarchy->Name);
 
-        bool objectLinkExists = !sqlObjectHierarchy.ObjectUUID.isNull();
+        bool objectLinkExists = !_selectedSQLObjectHierarchy->ObjectUUID.isNull();
         ui->groupBoxObject->setEnabled(objectLinkExists);
         ui->pushButtonCreateObjectLink->setEnabled(!objectLinkExists);
+        ui->tableWidgetAttributes->setEnabled(objectLinkExists);
         if(objectLinkExists)
         {
-            SQLObject sqlObject = _sqlObjects[sqlObjectHierarchy.ObjectUUID];
+            SQLObject sqlObject = _sqlObjects[_selectedSQLObjectHierarchy->ObjectUUID];
             ui->lineEditObjecName->setText(sqlObject.Name);
-            ui->lineEditObjecUUID->setText(sqlObject.ObjectUUID.toString(QUuid::WithoutBraces));
+            ui->lineEditObjecUUID->setText(sqlObject.ObjectUUID.toString(QUuid::WithoutBraces));            
         }
         else
         {
@@ -247,6 +319,7 @@ void MainWindow::on_treeWidgetObjectHierarchy_itemClicked(QTreeWidgetItem *item,
         }
 
     }
+    PopulateObjectAttributesTable();
 }
 
 void MainWindow::on_pushButtonCreateObjectLink_clicked()
@@ -268,5 +341,57 @@ void MainWindow::on_pushButtonCreateObjectLink_clicked()
                 PopulateTreeView();
             }
         }
+    }
+}
+
+void MainWindow::on_pushButtonCreateNewObject_clicked()
+{
+    if(_centriaSQLConnection != nullptr)
+    {
+        DialogCreateNewObject dialogCreateNewObject(this);
+        int result = dialogCreateNewObject.exec();
+        if(result == QDialog::Accepted)
+        {
+            SQLObject sqlObject;
+            sqlObject.Name = dialogCreateNewObject.Name;
+            sqlObject.ObjectUUID = dialogCreateNewObject.UUID;
+
+            if(!sqlObject.ObjectUUID.isNull() && sqlObject.Name.size() > 0)
+            {
+                _centriaSQLConnection->AddNewObject(sqlObject);
+                PopulateObjectList();
+            }
+        }
+    }
+}
+
+void MainWindow::on_tableWidgetAttributes_customContextMenuRequested(const QPoint &pos)
+{
+
+    QTableWidgetItem *parentItem = ui->tableWidgetAttributes->itemAt(pos);
+
+    QMenu menu(this);
+    QAction actionAddNewAttribute("Add new attribute", this);
+    actionAddNewAttribute.setProperty("Command", "AddNewAttribute");
+    menu.addAction(&actionAddNewAttribute);
+
+    if(parentItem != nullptr)
+    {
+        QAction actionRemoveAttribute(QString("Delete %1 attribute").arg(parentItem->text()), this);
+        actionRemoveAttribute.setProperty("Command", "RemoveAttribute");
+        menu.addAction(&actionRemoveAttribute);
+    }
+
+    QAction *selectedAction = menu.exec( ui->tableWidgetAttributes->mapToGlobal(pos));
+    QString command = selectedAction != nullptr ? selectedAction->property("Command").toString() : "";
+
+
+    if(command == "AddNewAttribute")
+    {
+        AddNewAttribute();
+    }
+    else if(command == "RemoveAttribute")
+    {
+        RemoveAttribute(parentItem);
     }
 }

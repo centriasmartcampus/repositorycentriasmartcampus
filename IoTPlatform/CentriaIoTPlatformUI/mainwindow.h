@@ -10,13 +10,15 @@
 #include <QHeaderView>
 #include <QStandardItemModel>
 
-//#include "dialogcreateobject.h"
 #include "dialogcreatehierarchyitem.h"
 #include "dialogcreateobjectlink.h"
+#include "dialogcreatenewobject.h"
+#include "dialogaddattribute.h"
 
 #include "DTO/centriawebservicedto.h"
 #include "../Common/centriafastcgitcplistener.h"
 #include "centriasqlconnection.h"
+#include "Entities/sqlattributevalue.h"
 
 namespace Ui {
 class MainWindow;
@@ -39,10 +41,10 @@ public slots:
 private slots:
     void on_treeWidgetObjectHierarchy_itemChanged(QTreeWidgetItem *item, int column);
     void on_treeWidgetObjectHierarchy_customContextMenuRequested(const QPoint &pos);
-
     void on_treeWidgetObjectHierarchy_itemClicked(QTreeWidgetItem *item, int column);
-
     void on_pushButtonCreateObjectLink_clicked();
+    void on_pushButtonCreateNewObject_clicked();    
+    void on_tableWidgetAttributes_customContextMenuRequested(const QPoint &pos);
 
 private:
     Ui::MainWindow *ui;
@@ -53,12 +55,19 @@ private:
      QMap<quint64, SQLObjectHierarchy> _sqlObjectHierarchies;
      QMap<QUuid, SQLObject> _sqlObjects;
 
+     SQLObjectHierarchy *_selectedSQLObjectHierarchy = nullptr;
+
      QStandardItemModel *_objectTableModel = nullptr;
+     QStandardItemModel *_attributeTableModel = nullptr;
 
      void PopulateTreeView();
      void PopulateObjectList();
+     void PopulateObjectAttributesTable();
      void CreateNewHierarchyItem(QTreeWidgetItem* parentItem = nullptr);
      void DeleteHierarchyItem(QTreeWidgetItem* item);
+
+     void AddNewAttribute();
+     void RemoveAttribute(QTableWidgetItem* item);
 
 
      //bool eventFilter(QObject *obj, QEvent *e);

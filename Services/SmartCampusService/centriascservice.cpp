@@ -24,7 +24,7 @@ CentriaSCService::CentriaSCService(QObject *parent) : QObject(parent)
 
 
 
-    _timerId = startTimer(100);
+    //_timerId = startTimer(100);
 
     SCLog::AddDebug("CentriaSCService::CentriaSCService end");
 }
@@ -62,8 +62,9 @@ CentriaSCService::~CentriaSCService()
 
 void CentriaSCService::NewRequest(CentriaFastCGIRequest &centriaFastCGIRequest)
 {
-    centriaFastCGIRequest.Response.append("Testi\n\n\n");
-    centriaFastCGIRequest.Response.append("Mitä ihmettä <br> toinen rivi\n");
+    //centriaFastCGIRequest.Response.append("Testi\n\n\n");
+    //centriaFastCGIRequest.Response.append("Mitä ihmettä <br> toinen rivi\n");
+    centriaFastCGIRequest.Response.append("Hello Vadym!");
     centriaFastCGIRequest.Response.append(QDateTime::currentDateTime().toString("hh:mm:ss.zzz"));
 }
 
