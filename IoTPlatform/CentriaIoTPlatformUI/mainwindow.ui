@@ -36,7 +36,7 @@ QGroupBox::title {
        </sizepolicy>
       </property>
       <property name="currentIndex">
-       <number>1</number>
+       <number>0</number>
       </property>
       <widget class="QWidget" name="tabHierarchy">
        <attribute name="title">
@@ -156,7 +156,7 @@ QGroupBox::title {
           </layout>
          </item>
          <item>
-          <widget class="QTableWidget" name="tableWidgetAttributes"/>
+          <widget class="QTableView" name="tableViewAttributes"/>
          </item>
         </layout>
        </widget>

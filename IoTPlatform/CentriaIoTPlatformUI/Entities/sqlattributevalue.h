@@ -3,6 +3,8 @@
 
 #include <QObject>
 
+#include "sqlattribute.h"
+
 class SQLAttributeValue
 {
 public:
@@ -10,6 +12,8 @@ public:
     quint64 AttributeID = 0;
     QUuid ObjectUUID = "";
     QByteArray Value;
+    SQLAttribute Attribute;
 };
+Q_DECLARE_METATYPE(SQLAttributeValue)
 
 #endif // SQLATTRIBUTEVALUE_H

@@ -13,6 +13,7 @@ DialogCreateAttribute::DialogCreateAttribute(CentriaSQLConnection *centriaSQLCon
     ui->comboBoxAttributeValueType->addItem("int");
     ui->comboBoxAttributeValueType->addItem("decimal");
     ui->comboBoxAttributeValueType->addItem("string");
+    ui->comboBoxAttributeValueType->addItem("binary");
 }
 
 DialogCreateAttribute::~DialogCreateAttribute()

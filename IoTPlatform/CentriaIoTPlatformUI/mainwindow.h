@@ -10,6 +10,7 @@
 #include <QHeaderView>
 #include <QStandardItemModel>
 
+
 #include "dialogcreatehierarchyitem.h"
 #include "dialogcreateobjectlink.h"
 #include "dialogcreatenewobject.h"
@@ -19,6 +20,7 @@
 #include "../Common/centriafastcgitcplistener.h"
 #include "centriasqlconnection.h"
 #include "Entities/sqlattributevalue.h"
+#include "Entities/sqlattributevalueparser.h"
 
 namespace Ui {
 class MainWindow;
@@ -37,6 +39,10 @@ public:
 public slots:
     void NewRequest(CentriaFastCGIRequest& scFastCGIRequest);
 
+    void AttributeItemDataChanged(const QModelIndex &topLeft, const QModelIndex &bottomRight, const QVector<int> &roles = QVector<int>());
+
+    void closeEditor(QWidget *editor, QAbstractItemDelegate::EndEditHint hint);
+
 
 private slots:
     void on_treeWidgetObjectHierarchy_itemChanged(QTreeWidgetItem *item, int column);
@@ -44,7 +50,11 @@ private slots:
     void on_treeWidgetObjectHierarchy_itemClicked(QTreeWidgetItem *item, int column);
     void on_pushButtonCreateObjectLink_clicked();
     void on_pushButtonCreateNewObject_clicked();    
-    void on_tableWidgetAttributes_customContextMenuRequested(const QPoint &pos);
+    void on_tableViewAttributes_customContextMenuRequested(const QPoint &pos);
+
+protected:
+    bool eventFilter(QObject* obj, QEvent* event);
+
 
 private:
     Ui::MainWindow *ui;
@@ -59,6 +69,10 @@ private:
 
      QStandardItemModel *_objectTableModel = nullptr;
      QStandardItemModel *_attributeTableModel = nullptr;
+
+     QModelIndex _editedModelIndex;
+     quint64 _previousParentID = -1;
+
 
      void PopulateTreeView();
      void PopulateObjectList();

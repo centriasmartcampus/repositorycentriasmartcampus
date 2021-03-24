@@ -1,11 +1,12 @@
 #include "dialogcreatenewobject.h"
 #include "ui_dialogcreatenewobject.h"
 
-DialogCreateNewObject::DialogCreateNewObject(QWidget *parent) :
+DialogCreateNewObject::DialogCreateNewObject(QWidget *parent, QString name) :
     QDialog(parent),
     ui(new Ui::DialogCreateNewObject)
 {
     ui->setupUi(this);
+    ui->lineEditObjectName->setText(name);
 }
 
 DialogCreateNewObject::~DialogCreateNewObject()

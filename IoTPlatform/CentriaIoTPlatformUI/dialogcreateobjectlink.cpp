@@ -81,3 +81,24 @@ void DialogCreateObjectLink::on_tableViewObject_clicked(const QModelIndex &index
     }
     ui->buttonBox->button(QDialogButtonBox::Ok)->setEnabled(SelectedSQLObject != nullptr);
 }
+
+void DialogCreateObjectLink::on_pushButtonCreateNewObject_clicked()
+{
+    if(_centriaSQLConnection != nullptr)
+    {
+        DialogCreateNewObject dialogCreateNewObject(this, _sqlObjectHierarchy.Name);
+        int result = dialogCreateNewObject.exec();
+        if(result == QDialog::Accepted)
+        {
+            SQLObject sqlObject;
+            sqlObject.Name = dialogCreateNewObject.Name;
+            sqlObject.ObjectUUID = dialogCreateNewObject.UUID;
+
+            if(!sqlObject.ObjectUUID.isNull() && sqlObject.Name.size() > 0)
+            {
+                _centriaSQLConnection->AddNewObject(sqlObject);
+                PopulateObjectList();
+            }
+        }
+    }
+}

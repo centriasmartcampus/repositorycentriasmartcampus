@@ -58,7 +58,7 @@ CentriaSQLConnection::~CentriaSQLConnection()
             {
                 QSqlRecord record = query.record();
                 SQLObject sqlObject;
-                sqlObject.ObjectUUID = record.value("ObjectUUID").toByteArray();
+                sqlObject.ObjectUUID = QUuid::fromRfc4122(record.value("ObjectUUID").toByteArray());
                 sqlObject.Name = record.value("Name").toString();
                 sqlObjects.insert(sqlObject.ObjectUUID, sqlObject);
             }
@@ -90,7 +90,7 @@ QMap<quint64,SQLObjectHierarchy> CentriaSQLConnection::GetObjectHierarchies()
                 SQLObjectHierarchy sqlObjectHierarchy;
                 sqlObjectHierarchy.ID = record.value("ID").toULongLong();
                 sqlObjectHierarchy.ParentID = record.value("ParentID").toULongLong();
-                sqlObjectHierarchy.ObjectUUID = record.value("ObjectUUID").toByteArray();
+                sqlObjectHierarchy.ObjectUUID = QUuid::fromRfc4122(record.value("ObjectUUID").toByteArray());
                 sqlObjectHierarchy.Name = record.value("Name").toString();
                 sqlObjectHiearchies.insert(sqlObjectHierarchy.ID, sqlObjectHierarchy);
             }
@@ -138,7 +138,7 @@ QMap<quint64, SQLAttribute> CentriaSQLConnection::GetAttributes()
 }
 
 QMap<quint64, SQLAttributeValue> CentriaSQLConnection::GetObjectAttributeValues(QUuid objectUUID)
-{
+{    
     SCLog::AddDebug(QString("CentriaSQLConnection::GetObjectAttributeValues(%1) start").arg(DTO.ID));
     QMap<quint64,SQLAttributeValue> sqlAttributeValues;
     if(_database.open())
@@ -147,7 +147,7 @@ QMap<quint64, SQLAttributeValue> CentriaSQLConnection::GetObjectAttributeValues(
 
         QString selectQuery = QString("SELECT ID, AttributeID, ObjectUUID, Value FROM AttributeValue WHERE ObjectUUID=:objectUUID");
         query.prepare(selectQuery);
-        query.bindValue(":objectUUID", objectUUID.toByteArray(), QSql::In | QSql::Binary);
+        query.bindValue(":objectUUID", objectUUID.toRfc4122(), QSql::In | QSql::Binary);
         if(query.exec())
         {
             while(query.next())
@@ -156,7 +156,7 @@ QMap<quint64, SQLAttributeValue> CentriaSQLConnection::GetObjectAttributeValues(
                 SQLAttributeValue sqlAttributeValue;
                 sqlAttributeValue.ID = record.value("ID").toULongLong();
                 sqlAttributeValue.AttributeID = record.value("AttributeID").toULongLong();
-                sqlAttributeValue.ObjectUUID = record.value("ObjectUUID").toByteArray();
+                sqlAttributeValue.ObjectUUID = QUuid::fromRfc4122(record.value("ObjectUUID").toByteArray());
                 sqlAttributeValue.Value = record.value("Value").toByteArray();
                 sqlAttributeValues.insert(sqlAttributeValue.ID, sqlAttributeValue);
             }
@@ -196,7 +196,7 @@ void CentriaSQLConnection::AddNewObject(SQLObject &sqlObject)
     QString insertQuery = QString("INSERT INTO Object(Name, ObjectUUID) VALUES(:name, :objectUUID)");
     query.prepare(insertQuery);
     query.bindValue(":name", sqlObject.Name);
-    query.bindValue(":objectUUID", sqlObject.ObjectUUID.toByteArray(), QSql::In | QSql::Binary);
+    query.bindValue(":objectUUID", sqlObject.ObjectUUID.toRfc4122(), QSql::In | QSql::Binary);
     //query.prepare("INSERT INTO Object (ObjectUUID, Name) VALUES( :data, 'Service')");
     //query.bindValue(":data", uuid.toByteArray(), QSql::In | QSql::Binary);
     if(!query.exec())
@@ -230,7 +230,7 @@ void CentriaSQLConnection::AddNewAttributeValue(SQLAttributeValue &sqlAttributeV
     QString insertQuery = QString("INSERT INTO AttributeValue(AttributeID, ObjectUUID,Value) VALUES(:attributeID, :objectUUID, :value)");
     query.prepare(insertQuery);
     query.bindValue(":attributeID", sqlAttributeValue.AttributeID);
-    query.bindValue(":objectUUID", sqlAttributeValue.ObjectUUID.toByteArray(), QSql::In | QSql::Binary);
+    query.bindValue(":objectUUID", sqlAttributeValue.ObjectUUID.toRfc4122(), QSql::In | QSql::Binary);
     query.bindValue(":value", sqlAttributeValue.Value, QSql::In | QSql::Binary);
     if(!query.exec())
     {
@@ -263,7 +263,7 @@ void CentriaSQLConnection::UpdateObjectHierarchy(SQLObjectHierarchy &sqlObjectHi
     query.prepare(updateQuery);
     query.bindValue(":parentID", sqlObjectHierarchy.ParentID);
     query.bindValue(":name", sqlObjectHierarchy.Name);
-    query.bindValue(":objectUUID", sqlObjectHierarchy.ObjectUUID.toByteArray(), QSql::In | QSql::Binary);
+    query.bindValue(":objectUUID", sqlObjectHierarchy.ObjectUUID.toRfc4122(), QSql::In | QSql::Binary);
     //query.prepare("INSERT INTO Object (ObjectUUID, Name) VALUES( :data, 'Service')");
     //query.bindValue(":data", uuid.toByteArray(), QSql::In | QSql::Binary);
     if(!query.exec())
@@ -272,6 +272,21 @@ void CentriaSQLConnection::UpdateObjectHierarchy(SQLObjectHierarchy &sqlObjectHi
         SCLog::AddError(query.lastError().text());
     }
     SCLog::AddDebug(QString("CentriaSQLConnection::UpdateObjectHierarchy (%1) end").arg(DTO.ID));
+}
+
+void CentriaSQLConnection::UpdateAttributeValue(SQLAttributeValue &sqlAttributeValue)
+{
+    SCLog::AddDebug(QString("CentriaSQLConnection::UpdateAttributeValue (%1) start").arg(DTO.ID));
+    QSqlQuery query(_database);
+    QString updateQuery = QString("UPDATE AttributeValue SET Value=:value WHERE ID=%1;").arg(sqlAttributeValue.ID);
+    query.prepare(updateQuery);
+    query.bindValue(":value", sqlAttributeValue.Value, QSql::In | QSql::Binary);
+    if(!query.exec())
+    {
+        SCLog::AddError("Cannot Attribute Value to database");
+        SCLog::AddError(query.lastError().text());
+    }
+    SCLog::AddDebug(QString("CentriaSQLConnection::UpdateAttributeValue (%1) end").arg(DTO.ID));
 }
 
 

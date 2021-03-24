@@ -34,6 +34,7 @@ public:
     void AddNewAttributeValue(SQLAttributeValue &sqlAttributeValue);
     void DeleteObjectHierarchy(quint64 id);
     void UpdateObjectHierarchy(SQLObjectHierarchy& sqlObjectHierarchy);
+    void UpdateAttributeValue(SQLAttributeValue& sqlAttributeValue);
 
 
 

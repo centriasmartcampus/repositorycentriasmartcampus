@@ -15,7 +15,7 @@ class DialogCreateNewObject : public QDialog
 public:
     QString Name = "";
     QUuid UUID;
-    explicit DialogCreateNewObject(QWidget *parent = nullptr);
+    explicit DialogCreateNewObject(QWidget *parent = nullptr, QString name = "");
     ~DialogCreateNewObject();
 
 private slots:

@@ -8,6 +8,7 @@
 #include "Entities/sqlobject.h"
 #include "Entities/sqlobjecthierarchy.h"
 #include "centriasqlconnection.h"
+#include "dialogcreatenewobject.h"
 
 namespace Ui {
 class DialogCreateObjectLink;
@@ -27,6 +28,8 @@ private slots:
 
 
     void on_tableViewObject_clicked(const QModelIndex &index);
+
+    void on_pushButtonCreateNewObject_clicked();
 
 private:
     Ui::DialogCreateObjectLink *ui;

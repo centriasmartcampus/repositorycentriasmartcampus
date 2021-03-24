@@ -11,7 +11,11 @@ MainWindow::MainWindow(QWidget *parent) :
     ui->tableViewObject->horizontalHeader()->setSectionResizeMode(QHeaderView::Stretch);
     ui->tableViewObject->setSelectionMode(QAbstractItemView::SingleSelection);
     ui->tableViewObject->setSelectionBehavior(QAbstractItemView::SelectRows);
-    ui->tableWidgetAttributes->setContextMenuPolicy(Qt::CustomContextMenu);
+    ui->tableViewAttributes->setContextMenuPolicy(Qt::CustomContextMenu);
+    ui->tableViewAttributes->setEditTriggers(QAbstractItemView::DoubleClicked);
+
+    connect(ui->tableViewAttributes->itemDelegate(),SIGNAL(closeEditor(QWidget*,QAbstractItemDelegate::EndEditHint)), this, SLOT(closeEditor(QWidget*,QAbstractItemDelegate::EndEditHint)));
+    ui->tableViewAttributes->installEventFilter(this);
 
     DTO = CentriaWebServiceDTO("CentriaWebService");
     if(DTO.CentriaFastCGITCPListener.size() > 0)
@@ -59,6 +63,35 @@ void MainWindow::NewRequest(CentriaFastCGIRequest &scFastCGIRequest)
     scFastCGIRequest.Response.append("}\n");
 }
 
+void MainWindow::AttributeItemDataChanged(const QModelIndex &topLeft, const QModelIndex &bottomRight, const QVector<int> &roles)
+{
+    int t = 0;
+}
+
+void MainWindow::closeEditor(QWidget *editor, QAbstractItemDelegate::EndEditHint hint)
+{
+    QStandardItem *_editedItem = nullptr;
+
+    if(_editedModelIndex.row() >= 0 && _editedModelIndex.column() >= 0)
+    {
+        QStandardItem *editedItem = _attributeTableModel->item(_editedModelIndex.row(),_editedModelIndex.column());
+        QString editedText = editedItem->text();
+        SQLAttributeValue attributeValue = qvariant_cast<SQLAttributeValue>(editedItem->data());
+
+        if(QString(attributeValue.Value) != editedText)
+        {
+            if(_centriaSQLConnection != nullptr)
+            {
+                attributeValue.Value = SQLAttributeValueParser::CreateByteArray(attributeValue.Attribute.ValueType,editedText);
+                _centriaSQLConnection->UpdateAttributeValue(attributeValue);
+                PopulateObjectAttributesTable();
+            }
+        }
+    }
+
+
+}
+
 void MainWindow::CreateNewHierarchyItem(QTreeWidgetItem* parentItem)
 {
     DialogCreateHierarchyItem dialogCreateHierarchyItem(this);
@@ -72,6 +105,7 @@ void MainWindow::CreateNewHierarchyItem(QTreeWidgetItem* parentItem)
             sqlObjectHierarchy.ParentID = parentItem != nullptr ? parentItem->text(1).toULongLong() : 0;
             _centriaSQLConnection->AddNewObjectHierarchy(sqlObjectHierarchy);
             PopulateTreeView();
+            _previousParentID = sqlObjectHierarchy.ParentID;
         }
     }
 }
@@ -131,12 +165,18 @@ void MainWindow::PopulateTreeView()
                 rootItem->setText(1, QString::number(sqlObjectHierarchy.ID));
                 ui->treeWidgetObjectHierarchy->addTopLevelItem(rootItem);
                 items.insert(sqlObjectHierarchy.ID,rootItem);
+                rootItem->setExpanded(true);
             }
             else
             {
                 QTreeWidgetItem *parentItem = items[sqlObjectHierarchy.ParentID];
                 if(parentItem != nullptr)
                 {
+                    if(sqlObjectHierarchy.ParentID > 0 && sqlObjectHierarchy.ParentID == _previousParentID)
+                    {
+                        parentItem->setExpanded(true);
+                        parentItem->setSelected(true);
+                    }
                     QTreeWidgetItem *childItem = new QTreeWidgetItem();
                     childItem->setText(0, sqlObjectHierarchy.Name);
                     childItem->setText(1, QString::number(sqlObjectHierarchy.ID));
@@ -146,6 +186,7 @@ void MainWindow::PopulateTreeView()
             }
         }
     }
+
 }
 
 void MainWindow::PopulateObjectList()
@@ -195,9 +236,10 @@ void MainWindow::PopulateObjectAttributesTable()
 
         }
         _attributeTableModel = new QStandardItemModel(this);
-        _attributeTableModel->setColumnCount(2);
+        _attributeTableModel->setColumnCount(3);
         _attributeTableModel->setHeaderData(0, Qt::Horizontal, QObject::tr("Name"));
-        _attributeTableModel->setHeaderData(1, Qt::Horizontal, QObject::tr("UUID"));
+        _attributeTableModel->setHeaderData(1, Qt::Horizontal, QObject::tr("Value type"));
+        _attributeTableModel->setHeaderData(2, Qt::Horizontal, QObject::tr("Value"));
 
         if(_centriaSQLConnection != nullptr)
         {
@@ -206,16 +248,28 @@ void MainWindow::PopulateObjectAttributesTable()
             int rowIndex = 0;
             foreach(SQLAttributeValue sqlAttributeValue, sqlAttributeValues)
             {
-                SQLAttribute sqlAttribute = sqlAttributes[sqlAttributeValue.AttributeID];
+                sqlAttributeValue.Attribute = sqlAttributes[sqlAttributeValue.AttributeID];
 
-                _attributeTableModel->setItem(rowIndex,0,new QStandardItem(sqlAttribute.Name));
-                _attributeTableModel->setItem(rowIndex,1,new QStandardItem(QString(sqlAttributeValue.Value)));
+                QStandardItem *nameItem = new QStandardItem(sqlAttributeValue.Attribute.Name);
+                nameItem->setEditable(false);
+                _attributeTableModel->setItem(rowIndex,0,nameItem);
+
+                QStandardItem *valueTypeItem = new QStandardItem(QString(sqlAttributeValue.Attribute.ValueType));
+                valueTypeItem->setEditable(false);
+                _attributeTableModel->setItem(rowIndex,1, valueTypeItem);
+
+                QVariant value = SQLAttributeValueParser::GetAttributeValue(sqlAttributeValue.Attribute.ValueType, sqlAttributeValue.Value);
+                QStandardItem *valueItem = new QStandardItem(QVariant(value).toString());
+                valueItem->setEditable(true);
+                valueItem->setData(QVariant::fromValue<SQLAttributeValue>(sqlAttributeValue));
+                connect(_attributeTableModel, SIGNAL(dataChanged(QModelIndex,QModelIndex,QVector<int>)), this, SLOT(AttributeItemDataChanged(QModelIndex,QModelIndex,QVector<int>)));
+                _attributeTableModel->setItem(rowIndex,2,valueItem);
                 rowIndex++;
             }
 
 
         }
-        ui->tableViewObject->setModel(_attributeTableModel);
+        ui->tableViewAttributes->setModel(_attributeTableModel);
     }
 }
 
@@ -305,7 +359,7 @@ void MainWindow::on_treeWidgetObjectHierarchy_itemClicked(QTreeWidgetItem *item,
         bool objectLinkExists = !_selectedSQLObjectHierarchy->ObjectUUID.isNull();
         ui->groupBoxObject->setEnabled(objectLinkExists);
         ui->pushButtonCreateObjectLink->setEnabled(!objectLinkExists);
-        ui->tableWidgetAttributes->setEnabled(objectLinkExists);
+        ui->tableViewAttributes->setEnabled(objectLinkExists);
         if(objectLinkExists)
         {
             SQLObject sqlObject = _sqlObjects[_selectedSQLObjectHierarchy->ObjectUUID];
@@ -365,24 +419,24 @@ void MainWindow::on_pushButtonCreateNewObject_clicked()
     }
 }
 
-void MainWindow::on_tableWidgetAttributes_customContextMenuRequested(const QPoint &pos)
-{
 
-    QTableWidgetItem *parentItem = ui->tableWidgetAttributes->itemAt(pos);
+void MainWindow::on_tableViewAttributes_customContextMenuRequested(const QPoint &pos)
+{
+    //QTableViewItem *parentItem = ui->tableViewAttributes->itemAt(pos);
 
     QMenu menu(this);
     QAction actionAddNewAttribute("Add new attribute", this);
     actionAddNewAttribute.setProperty("Command", "AddNewAttribute");
     menu.addAction(&actionAddNewAttribute);
 
-    if(parentItem != nullptr)
-    {
-        QAction actionRemoveAttribute(QString("Delete %1 attribute").arg(parentItem->text()), this);
-        actionRemoveAttribute.setProperty("Command", "RemoveAttribute");
-        menu.addAction(&actionRemoveAttribute);
-    }
+//    if(parentItem != nullptr)
+//    {
+//        QAction actionRemoveAttribute(QString("Delete %1 attribute").arg(parentItem->text()), this);
+//        actionRemoveAttribute.setProperty("Command", "RemoveAttribute");
+//        menu.addAction(&actionRemoveAttribute);
+//    }
 
-    QAction *selectedAction = menu.exec( ui->tableWidgetAttributes->mapToGlobal(pos));
+    QAction *selectedAction = menu.exec( ui->tableViewAttributes->mapToGlobal(pos));
     QString command = selectedAction != nullptr ? selectedAction->property("Command").toString() : "";
 
 
@@ -390,8 +444,32 @@ void MainWindow::on_tableWidgetAttributes_customContextMenuRequested(const QPoin
     {
         AddNewAttribute();
     }
-    else if(command == "RemoveAttribute")
-    {
-        RemoveAttribute(parentItem);
-    }
+//    else if(command == "RemoveAttribute")
+//    {
+//        RemoveAttribute(parentItem);
+    //    }
 }
+
+bool MainWindow::eventFilter(QObject *obj, QEvent *event)
+{
+    if (event->type()==QEvent::KeyPress)
+    {
+        QKeyEvent* key = static_cast<QKeyEvent*>(event);
+        if ( (key->key() == Qt::Key_Enter) || (key->key() == Qt::Key_Return) )
+        {
+            _editedModelIndex = ui->tableViewAttributes->currentIndex();
+            //_editedItem = _attributeTableModel->item(modelIndex.row(),modelIndex.column());
+        }
+        else
+        {
+           return QObject::eventFilter(obj, event);
+        }
+        return true;
+    }
+    else
+    {
+           return QObject::eventFilter(obj, event);
+    }
+    return false;
+}
+

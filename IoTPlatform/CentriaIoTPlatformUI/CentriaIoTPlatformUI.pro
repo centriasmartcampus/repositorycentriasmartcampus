@@ -15,6 +15,7 @@ TEMPLATE = app
 DEFINES += QT_DEPRECATED_WARNINGS
 
 SOURCES += \
+    Entities/sqlattributevalueparser.cpp \
     dialogaddattribute.cpp \
     dialogcreateattribute.cpp \
     dialogcreatehierarchyitem.cpp \
@@ -31,6 +32,7 @@ SOURCES += \
 HEADERS += \
     Entities/sqlattribute.h \
     Entities/sqlattributevalue.h \
+    Entities/sqlattributevalueparser.h \
     dialogaddattribute.h \
     dialogcreateattribute.h \
     dialogcreatehierarchyitem.h \
