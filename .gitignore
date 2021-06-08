@@ -1,0 +1,6 @@
+﻿################################################################################
+# This .gitignore file was automatically created by Microsoft(R) Visual Studio.
+################################################################################
+
+/VS/CentriaSmartCampusUI/CentriaSmartCampusUI/obj
+/VS/CentriaSmartCampusUI/CentriaSmartCampusUI/bin/Debug/netcoreapp3.1
